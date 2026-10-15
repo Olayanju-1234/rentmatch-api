@@ -1,6 +1,14 @@
 # RentMatch API
 
-A property-matching platform that uses Linear Programming optimization to match tenants with properties based on budget, location, amenities, and size preferences. Includes a Stripe-powered viewing deposit system to reduce no-shows and protect landlord time.
+**Tenant–property matching with real optimisation and real money.** RentMatch scores every property for a tenant with a weighted linear-programming model, then clears the whole market at once with the Hungarian algorithm so each tenant gets the globally best assignment, not just a greedy first pick. Viewings are secured with refundable deposits through Stripe Checkout or Paystack, confirmed only by signature-verified webhooks.
+
+**[Live app](https://final-year-project-frontend-sandy.vercel.app)** · Frontend repo: [rentmatch](https://github.com/Olayanju-1234/rentmatch)
+
+- **Matching:** LP scoring across budget, location, amenities and size, with hard-constraint filtering and per-search weights
+- **Meridian:** global tenant↔property assignment with the Hungarian algorithm (Jonker-Volgenant, O(n³)), exposed at `GET /optimization/meridian/:tenantId`
+- **Deposits:** Stripe Checkout or Paystack, raw-body webhook verification (HMAC-SHA256 / HMAC-SHA512), idempotency keys per viewing, automatic refund or forfeit
+- **Landlords:** Stripe Connect onboarding, subscription checkout and billing portal
+- **Platform:** JWT roles (tenant, landlord, admin), real-time messaging over Socket.io, Winston logging
 
 ## Table of Contents
 
@@ -54,6 +62,7 @@ graph TD
 
 - Tenants pay a £50 refundable deposit to confirm a viewing
 - Stripe Checkout Session created per viewing — expires in 30 minutes
+- Paystack inline checkout as an alternative, verified with HMAC-SHA512 over the raw body
 - Webhook signature verified with HMAC-SHA256 before any DB write
 - Idempotent: duplicate `checkout.session.completed` events are a no-op
 - Deposit refunded automatically when viewing completes; forfeited on no-show
@@ -74,7 +83,7 @@ graph TD
 | Runtime | Node.js + TypeScript |
 | Framework | Express.js |
 | Database | MongoDB + Mongoose |
-| Payments | Stripe Checkout (viewing deposits) |
+| Payments | Stripe Checkout + Connect, Paystack (viewing deposits, landlord subscriptions) |
 | Auth | JWT, bcrypt |
 | File Uploads | Cloudinary |
 | Validation | express-validator |
